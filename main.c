@@ -1,23 +1,25 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-
-// #define OLIVEC_IMPLEMENTATION
-// #include "olive.c"
+#include <time.h>
 
 
 #define WIDTH 900
 #define HEIGHT 600
 #define FILE_NAME "image.ppm"
 
-#define COLOR_RED 0xFF0000FF
+#define COLOR_CADET_GREY 0xFF717C89
+#define COLOR_SPACE_CADET 0xFF2C2A4A
+
+void BGR_to_RGB(uint32_t bgr);
+static uint8_t color[3];
 
 void fill_color(uint32_t pixels[][WIDTH], uint32_t color){
     for (size_t y = 0; y < HEIGHT; y++)
     {
         for (size_t x = 0; x < WIDTH; x++)
         {
-            // pixels[y][x] = color;
+            pixels[y][x] = COLOR_CADET_GREY;
         }
     }  
 
@@ -31,20 +33,55 @@ void init_image(FILE *fp){
     fprintf(fp, "P6 %d %d 255\n", WIDTH, HEIGHT);
 }
 
-
-
 void update_image(FILE *fp, uint32_t  pixels[][WIDTH]){
     uint32_t pixel;
     for (size_t y = 0; y < HEIGHT; y++)
     {
         for (size_t x = 0; x < WIDTH; x++)
         {
-            pixel = pixels[y][x];
-            fwrite(&pixel, 1, sizeof(uint32_t), fp);
+            BGR_to_RGB(pixels[y][x]);
+            fwrite(color, 1, sizeof(color), fp);
         }
     }  
 }
 
+void BGR_to_RGB(uint32_t bgr){
+    // b g r -> r g b
+    // R = COLORE & 0x0000FF >> 8 * 0
+    // G = COLORE & 0x00FF00 >> 8 * 1
+    // B = COLORE & 0xFF0000 >> 8 * 2
+    color[0] = (bgr & 0x0000FF) >> 8 * 0;
+    color[1] = (bgr & 0x00FF00) >> 8 * 1;
+    color[2] = (bgr & 0xFF0000) >> 8 * 2;
+}
+
+void put_dot(uint32_t pixels[][WIDTH], uint32_t x,uint32_t y, uint32_t bgr)
+{
+    pixels[y][x] = bgr;
+}
+
+int put_circle(uint32_t pixels[][WIDTH], uint32_t w, uint32_t h, 
+                uint32_t x, uint32_t y, uint32_t radious, uint32_t bgr)
+{
+    // define square in which the cirle is inscribed
+    int x0, x1, y0, y1;
+    x0 = x - radious;
+    x1 = x + radious;
+    y0 = y - radious;
+    y1 = y + radious;
+    if (x0 < 0 || x1 >= w || y0 <0 || y1 >= h) return -1; // failed to put circle
+    for (int r = y0; r <= y1; r++)
+    {
+        for (int c = x0; c <= x1; c++)
+        {
+            if (((c - x)*(c - x) + (r - y)*(r - y)) <= radious*radious){
+                put_dot(pixels, c, r, bgr);
+            }
+        }
+    }
+    return 0;
+            
+}
 
 int main(int argc, char const *argv[])
 {
@@ -53,9 +90,13 @@ int main(int argc, char const *argv[])
    
     init_image(fp);
 
-    fill_color(pixels, COLOR_RED);
+    fill_color(pixels, COLOR_CADET_GREY);
+
+    // put_dot(pixels, 100, 200, COLOR_SPACE_CADET);
 
 
+
+    put_circle(pixels,WIDTH, HEIGHT, 100, 200, 20, COLOR_SPACE_CADET);
 
     update_image(fp, pixels);
 
