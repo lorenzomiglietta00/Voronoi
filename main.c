@@ -14,12 +14,35 @@
 void BGR_to_RGB(uint32_t bgr);
 static uint8_t color[3];
 
+typedef struct{
+    uint8_t R;
+    uint8_t G;
+    uint8_t B;
+}RGB;
+
+typedef struct{
+    uint16_t x;
+    uint16_t y;
+    RGB color;
+}Seed;
+
+
+
+
+RGB random_RGB_color(){
+    RGB color;
+    color.R = rand() % 256;
+    color.G = rand() % 256;
+    color.B = rand() % 256;
+    return color;
+}
+
 void fill_color(uint32_t pixels[][WIDTH], uint32_t color){
     for (size_t y = 0; y < HEIGHT; y++)
     {
         for (size_t x = 0; x < WIDTH; x++)
         {
-            pixels[y][x] = COLOR_CADET_GREY;
+            pixels[y][x] = color;
         }
     }  
 
@@ -69,7 +92,7 @@ int put_circle(uint32_t pixels[][WIDTH], uint32_t w, uint32_t h,
     x1 = x + radious;
     y0 = y - radious;
     y1 = y + radious;
-    if (x0 < 0 || x1 >= w || y0 <0 || y1 >= h) return -1; // failed to put circle
+    if (x0 < 0 || x1 >= w || y0 <0 || y1 >= h) return 0; // failed to put circle
     for (int r = y0; r <= y1; r++)
     {
         for (int c = x0; c <= x1; c++)
@@ -79,8 +102,30 @@ int put_circle(uint32_t pixels[][WIDTH], uint32_t w, uint32_t h,
             }
         }
     }
-    return 0;
-            
+    return 1;        
+}
+
+void seeds_generation(Seed* seeds, uint8_t dim, uint32_t w, uint32_t h){
+    for (size_t i = 0; i < dim; i++)
+    {
+        seeds[i].x = rand() % w;
+        seeds[i].y = rand() % h;
+        seeds[i].color = random_RGB_color()
+    }
+    
+}
+
+void voronoi_generation(uint32_t pixels, size_t seed_n){
+    Seed* seeds;
+    seeds_generation(seeds, 10, WIDTH, HEIGHT);
+    
+    for (size_t i = 0; i < seed_n; i++)
+    {
+        
+        if(!put_circle(pixels,WIDTH, HEIGHT, seeds[i].x, seeds[i].y, 5, seeds[i].color) {
+            i--;
+        }
+    }
 }
 
 int main(int argc, char const *argv[])
@@ -95,8 +140,9 @@ int main(int argc, char const *argv[])
     // put_dot(pixels, 100, 200, COLOR_SPACE_CADET);
 
 
+    srand(time(0));
+    
 
-    put_circle(pixels,WIDTH, HEIGHT, 100, 200, 20, COLOR_SPACE_CADET);
 
     update_image(fp, pixels);
 

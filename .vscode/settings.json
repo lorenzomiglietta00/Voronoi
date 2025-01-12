@@ -2,6 +2,8 @@
     "files.associations": {
         "*.ejs": "html",
         "types.h": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "time.h": "c",
+        "stdlib.h": "c"
     }
 }
